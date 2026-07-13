@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户首页 - 程序设计学习系统</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">🎓 学习系统</a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text text-white me-3">
+                    欢迎，{{ user.username }}
+                </span>
+                <a href="{% url 'logout' %}" class="btn btn-outline-light btn-sm">退出</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container mt-5">
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+        
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">👤 个人信息</h5>
+                        <p><strong>姓名：</strong>{{ user.username }}</p>
+                        <p><strong>学号/工号：</strong>{{ user.id_num }}</p>
+                        <p><strong>邮箱：</strong>{{ user.email }}</p>
+                        <p><strong>角色：</strong>
+                            {% if user.is_superuser %}
+                                超级管理员
+                            {% elif user.is_admin %}
+                                教师
+                            {% else %}
+                                学生
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">🚀 快速入口</h5>
+                        <div class="row mt-3">
+                            <div class="col-md-6 mb-3">
+                                <div class="card text-center">
+                                    <div class="card-body">
+                                        <h1>📚</h1>
+                                        <h6>知识库</h6>
+                                        <p class="text-muted small">浏览学习资料</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="card text-center">
+                                    <div class="card-body">
+                                        <h1>✏️</h1>
+                                        <h6>题目练习</h6>
+                                        <p class="text-muted small">在线编程练习</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% if user.is_staff %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card text-center">
+                                    <div class="card-body">
+                                        <h1>⚙️</h1>
+                                        <h6>管理后台</h6>
+                                        <a href="/admin/" class="btn btn-sm btn-primary mt-2">进入</a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -32,7 +32,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'learning_system.urls'
+ROOT_URLCONF = 'learning_system.urls'  # 或者是 'programming_learning_system.urls'
 
 TEMPLATES = [
     {
@@ -97,3 +97,14 @@ LOGOUT_REDIRECT_URL = '/auth/login/'
 
 # Django 3.2 默认主键类型
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# 认证后端配置
+AUTHENTICATION_BACKENDS = [
+    'myauth.backends.CustomAuthBackend',  # 自定义认证后端
+    'django.contrib.auth.backends.ModelBackend',  # Django 默认后端（备用）
+]
+
+# 登录相关配置
+LOGIN_URL = 'login'  # 未登录时重定向到登录页
+LOGIN_REDIRECT_URL = 'dashboard'  # 登录成功后重定向到用户首页
+LOGOUT_REDIRECT_URL = 'login'  # 登出后重定向到登录页

@@ -1,194 +1,277 @@
 from django.db import models
-from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 
-class KnowledgePoint(models.Model):
-    """知识点"""
-    title = models.CharField(max_length=200, verbose_name='标题')
-    content = models.TextField(verbose_name='内容')
-    category = models.CharField(max_length=100, verbose_name='分类', db_index=True)
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        related_name='knowledge_points',
-        verbose_name='创建者'
+User = get_user_model()
+
+class Course(models.Model):
+    """课程模型"""
+    title = models.CharField('课程名称', max_length=200)
+    description = models.TextField('课程描述')
+    teacher = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='teaching_courses',
+        verbose_name='授课教师',
+        limit_choices_to={'is_teacher': True}
     )
+    cover_image = models.ImageField(
+        '封面图片', 
+        upload_to='course_covers/', 
+        blank=True, 
+        null=True
+    )
+    difficulty = models.CharField(
+        '难度',
+        max_length=20,
+        choices=[
+            ('beginner', '初级'),
+            ('intermediate', '中级'),
+            ('advanced', '高级'),
+        ],
+        default='beginner'
+    )
+    is_published = models.BooleanField('是否发布', default=False)
+    created_at = models.DateTimeField('创建时间', auto_now_add=True)
+    updated_at = models.DateTimeField('更新时间', auto_now=True)
     
     class Meta:
-        db_table = 'learning_knowledge_points'
-        verbose_name = '知识点'
-        verbose_name_plural = '知识点'
+        verbose_name = '课程'
+        verbose_name_plural = '课程'
         ordering = ['-created_at']
     
     def __str__(self):
         return self.title
-
-class Question(models.Model):
-    """题目"""
-    ANSWER_CHOICES = (
-        ('A', 'A'),
-        ('B', 'B'),
-        ('C', 'C'),
-        ('D', 'D'),
-    )
     
-    knowledge_point = models.ForeignKey(
-        KnowledgePoint,
-        on_delete=models.CASCADE,
-        related_name='questions',
-        verbose_name='知识点'
+    def get_lesson_count(self):
+        """获取章节数量"""
+        return self.lessons.count()
+    
+    def get_student_count(self):
+        """获取学生数量"""
+        return self.enrollments.count()
+
+class Lesson(models.Model):
+    """章节模型"""
+    course = models.ForeignKey(
+        Course, 
+        on_delete=models.CASCADE, 
+        related_name='lessons',
+        verbose_name='所属课程'
     )
-    question_text = models.TextField(verbose_name='题目内容')
-    option_a = models.CharField(max_length=500, verbose_name='选项A')
-    option_b = models.CharField(max_length=500, verbose_name='选项B')
-    option_c = models.CharField(max_length=500, verbose_name='选项C')
-    option_d = models.CharField(max_length=500, verbose_name='选项D')
-    correct_answer = models.CharField(
-        max_length=1,
-        choices=ANSWER_CHOICES,
-        verbose_name='正确答案'
-    )
-    difficulty = models.IntegerField(default=3, verbose_name='难度(1-5)')
-    explanation = models.TextField(blank=True, verbose_name='答案解析')
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
+    title = models.CharField('章节标题', max_length=200)
+    content = models.TextField('章节内容')
+    video_url = models.URLField('视频链接', blank=True, null=True)
+    order = models.PositiveIntegerField('章节顺序', default=0)
+    duration = models.PositiveIntegerField('预计学习时长(分钟)', default=30)
+    created_at = models.DateTimeField('创建时间', auto_now_add=True)
+    updated_at = models.DateTimeField('更新时间', auto_now=True)
     
     class Meta:
-        db_table = 'learning_questions'
-        verbose_name = '题目'
-        verbose_name_plural = '题目'
-        ordering = ['-created_at']
+        verbose_name = '章节'
+        verbose_name_plural = '章节'
+        ordering = ['course', 'order']
+        unique_together = ['course', 'order']  # 同一课程内章节顺序唯一
     
     def __str__(self):
-        return self.question_text[:30]
+        return f"{self.course.title} - {self.title}"
+    
+    def get_assignment_count(self):
+        """获取作业数量"""
+        return self.assignments.count()
 
 class Assignment(models.Model):
-    """作业"""
-    title = models.CharField(max_length=200, verbose_name='标题')
-    description = models.TextField(blank=True, verbose_name='说明')
-    teacher = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
+    """作业模型"""
+    lesson = models.ForeignKey(
+        Lesson, 
+        on_delete=models.CASCADE, 
         related_name='assignments',
-        verbose_name='教师'
+        verbose_name='所属章节'
     )
-    questions = models.ManyToManyField(
-        Question,
-        through='AssignmentQuestion',
-        verbose_name='题目'
+    title = models.CharField('作业标题', max_length=200)
+    description = models.TextField('作业描述')
+    question = models.TextField('题目要求')
+    starter_code = models.TextField('初始代码', blank=True, null=True)
+    test_cases = models.JSONField('测试用例', default=list, blank=True)
+    max_score = models.PositiveIntegerField(
+        '满分',
+        default=100,
+        validators=[MinValueValidator(1), MaxValueValidator(100)]
     )
-    points_per_question = models.IntegerField(default=10, verbose_name='每题分值')
-    deadline = models.DateTimeField(null=True, blank=True, verbose_name='截止时间')
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
-    is_active = models.BooleanField(default=True, verbose_name='是否启用')
+    difficulty = models.CharField(
+        '难度',
+        max_length=20,
+        choices=[
+            ('easy', '简单'),
+            ('medium', '中等'),
+            ('hard', '困难'),
+        ],
+        default='easy'
+    )
+    deadline = models.DateTimeField('截止时间', blank=True, null=True)
+    created_at = models.DateTimeField('创建时间', auto_now_add=True)
+    updated_at = models.DateTimeField('更新时间', auto_now=True)
     
     class Meta:
-        db_table = 'learning_assignments'
         verbose_name = '作业'
         verbose_name_plural = '作业'
-        ordering = ['-created_at']
+        ordering = ['lesson', 'created_at']
     
     def __str__(self):
-        return self.title
+        return f"{self.lesson.title} - {self.title}"
     
-    def is_expired(self):
-        """是否已过期"""
-        if not self.deadline:
-            return False
-        return timezone.now() > self.deadline
-
-class AssignmentQuestion(models.Model):
-    """作业-题目关联表"""
-    assignment = models.ForeignKey(
-        Assignment,
-        on_delete=models.CASCADE,
-        verbose_name='作业'
-    )
-    question = models.ForeignKey(
-        Question,
-        on_delete=models.CASCADE,
-        verbose_name='题目'
-    )
-    order = models.IntegerField(default=0, verbose_name='顺序')
+    def is_overdue(self):
+        """判断是否过期"""
+        if self.deadline:
+            return timezone.now() > self.deadline
+        return False
     
-    class Meta:
-        db_table = 'learning_assignment_questions'
-        ordering = ['order']
-        unique_together = ('assignment', 'question')
-        verbose_name = '作业题目'
-        verbose_name_plural = '作业题目'
+    def get_submission_count(self):
+        """获取提交数量"""
+        return self.submissions.count()
 
-class SubmittedAssignment(models.Model):
-    """已提交的作业"""
+class Submission(models.Model):
+    """作业提交模型"""
     assignment = models.ForeignKey(
-        Assignment,
-        on_delete=models.CASCADE,
+        Assignment, 
+        on_delete=models.CASCADE, 
         related_name='submissions',
         verbose_name='作业'
     )
     student = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
+        User, 
+        on_delete=models.CASCADE, 
         related_name='submissions',
-        verbose_name='学生'
+        verbose_name='学生',
+        limit_choices_to={'is_student': True}
     )
-    submitted_at = models.DateTimeField(auto_now_add=True, verbose_name='提交时间')
-    score = models.IntegerField(default=0, verbose_name='得分')
-    correct_count = models.IntegerField(default=0, verbose_name='正确题数')
-    total_count = models.IntegerField(default=0, verbose_name='总题数')
-    is_late = models.BooleanField(default=False, verbose_name='是否迟交')
+    code = models.TextField('提交代码')
+    score = models.PositiveIntegerField(
+        '得分',
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(0), MaxValueValidator(100)]
+    )
+    status = models.CharField(
+        '状态',
+        max_length=20,
+        choices=[
+            ('pending', '待批改'),
+            ('passed', '通过'),
+            ('failed', '未通过'),
+            ('grading', '批改中'),
+        ],
+        default='pending'
+    )
+    feedback = models.TextField('教师反馈', blank=True, null=True)
+    test_result = models.JSONField('测试结果', default=dict, blank=True)
+    submitted_at = models.DateTimeField('提交时间', auto_now_add=True)
+    graded_at = models.DateTimeField('批改时间', blank=True, null=True)
     
     class Meta:
-        db_table = 'learning_submitted_assignments'
-        unique_together = ('assignment', 'student')
+        verbose_name = '作业提交'
+        verbose_name_plural = '作业提交'
         ordering = ['-submitted_at']
-        verbose_name = '提交的作业'
-        verbose_name_plural = '提交的作业'
-    
-    def accuracy_rate(self):
-        """正确率"""
-        if self.total_count == 0:
-            return 0
-        return round(self.correct_count / self.total_count * 100, 2)
-
-class SubmittedAnswer(models.Model):
-    """提交的答案"""
-    submission = models.ForeignKey(
-        SubmittedAssignment,
-        on_delete=models.CASCADE,
-        related_name='answers',
-        verbose_name='提交记录'
-    )
-    question = models.ForeignKey(
-        Question,
-        on_delete=models.CASCADE,
-        verbose_name='题目'
-    )
-    selected_answer = models.CharField(max_length=1, verbose_name='选择的答案')
-    is_correct = models.BooleanField(default=False, verbose_name='是否正确')
-    
-    class Meta:
-        db_table = 'learning_submitted_answers'
-        verbose_name = '提交的答案'
-        verbose_name_plural = '提交的答案'
-
-class StudentPoints(models.Model):
-    """学生积分"""
-    student = models.OneToOneField(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='points_record',
-        verbose_name='学生'
-    )
-    points = models.IntegerField(default=0, verbose_name='总积分')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='更新时间')
-    
-    class Meta:
-        db_table = 'learning_student_points'
-        ordering = ['-points']
-        verbose_name = '学生积分'
-        verbose_name_plural = '学生积分'
+        unique_together = ['assignment', 'student']  # 每个学生每个作业只能提交一次
     
     def __str__(self):
-        return f'{self.student.username} - {self.points}分'
+        return f"{self.student.username} - {self.assignment.title}"
+    
+    def is_passed(self):
+        """判断是否通过"""
+        return self.status == 'passed'
+    
+    def auto_grade(self):
+        """自动评分（简化版）"""
+        if self.assignment.test_cases:
+            passed_tests = 0
+            total_tests = len(self.assignment.test_cases)
+            
+            # 这里应该运行实际的代码测试
+            # 目前简化为随机分数
+            import random
+            passed_tests = random.randint(0, total_tests)
+            
+            self.score = int((passed_tests / total_tests) * self.assignment.max_score)
+            self.status = 'passed' if self.score >= 60 else 'failed'
+            self.graded_at = timezone.now()
+            self.save()
+
+class Enrollment(models.Model):
+    """选课记录模型"""
+    student = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='enrollments',
+        verbose_name='学生',
+        limit_choices_to={'is_student': True}
+    )
+    course = models.ForeignKey(
+        Course, 
+        on_delete=models.CASCADE, 
+        related_name='enrollments',
+        verbose_name='课程'
+    )
+    enrolled_at = models.DateTimeField('选课时间', auto_now_add=True)
+    completed = models.BooleanField('是否完成', default=False)
+    completed_at = models.DateTimeField('完成时间', blank=True, null=True)
+    
+    class Meta:
+        verbose_name = '选课记录'
+        verbose_name_plural = '选课记录'
+        ordering = ['-enrolled_at']
+        unique_together = ['student', 'course']  # 每个学生每门课程只能选一次
+    
+    def __str__(self):
+        return f"{self.student.username} - {self.course.title}"
+    
+    def get_progress_percentage(self):
+        """计算学习进度百分比"""
+        total_lessons = self.course.lessons.count()
+        if total_lessons == 0:
+            return 0
+        
+        completed_lessons = Progress.objects.filter(
+            student=self.student,
+            lesson__course=self.course,
+            completed=True
+        ).count()
+        
+        return int((completed_lessons / total_lessons) * 100)
+
+class Progress(models.Model):
+    """学习进度模型"""
+    student = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='progress',
+        verbose_name='学生',
+        limit_choices_to={'is_student': True}
+    )
+    lesson = models.ForeignKey(
+        Lesson, 
+        on_delete=models.CASCADE, 
+        related_name='progress',
+        verbose_name='章节'
+    )
+    completed = models.BooleanField('是否完成', default=False)
+    completed_at = models.DateTimeField('完成时间', blank=True, null=True)
+    last_accessed = models.DateTimeField('最后访问时间', auto_now=True)
+    time_spent = models.PositiveIntegerField('学习时长(分钟)', default=0)
+    
+    class Meta:
+        verbose_name = '学习进度'
+        verbose_name_plural = '学习进度'
+        ordering = ['-last_accessed']
+        unique_together = ['student', 'lesson']
+    
+    def __str__(self):
+        return f"{self.student.username} - {self.lesson.title}"
+    
+    def mark_as_completed(self):
+        """标记为已完成"""
+        if not self.completed:
+            self.completed = True
+            self.completed_at = timezone.now()
+            self.save()

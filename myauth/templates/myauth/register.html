@@ -1,0 +1,85 @@
+{% extends 'myauth/base.html' %}
+
+{% block title %}注册 - 程序设计学习系统{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+    <div class="auth-header">
+        <h2>📝 新用户注册</h2>
+        <p class="text-muted">创建您的学习账号</p>
+    </div>
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="mb-3">
+            <label for="{{ form.id_num.id_for_label }}" class="form-label">
+                {{ form.id_num.label }}
+            </label>
+            {{ form.id_num }}
+            {% if form.id_num.errors %}
+                <div class="text-danger mt-1">
+                    {{ form.id_num.errors }}
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="mb-3">
+            <label for="{{ form.username.id_for_label }}" class="form-label">
+                {{ form.username.label }}
+            </label>
+            {{ form.username }}
+            {% if form.username.errors %}
+                <div class="text-danger mt-1">
+                    {{ form.username.errors }}
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="mb-3">
+            <label for="{{ form.email.id_for_label }}" class="form-label">
+                {{ form.email.label }}
+            </label>
+            {{ form.email }}
+            {% if form.email.errors %}
+                <div class="text-danger mt-1">
+                    {{ form.email.errors }}
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="mb-3">
+            <label for="{{ form.password1.id_for_label }}" class="form-label">
+                {{ form.password1.label }}
+            </label>
+            {{ form.password1 }}
+            {% if form.password1.errors %}
+                <div class="text-danger mt-1">
+                    {{ form.password1.errors }}
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="mb-3">
+            <label for="{{ form.password2.id_for_label }}" class="form-label">
+                {{ form.password2.label }}
+            </label>
+            {{ form.password2 }}
+            {% if form.password2.errors %}
+                <div class="text-danger mt-1">
+                    {{ form.password2.errors }}
+                </div>
+            {% endif %}
+        </div>
+        
+        <button type="submit" class="btn btn-primary w-100 mb-3">注册</button>
+        
+        <div class="text-center">
+            <p class="text-muted">
+                已有账号？
+                <a href="{% url 'login' %}" class="text-decoration-none">立即登录</a>
+            </p>
+        </div>
+    </form>
+</div>
+{% endblock %}
