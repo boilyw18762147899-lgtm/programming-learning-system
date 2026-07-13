@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}提交管理 - 编程学习系统{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{% if assignment %}{{ assignment.title }} - 提交列表{% else %}全部提交{% endif %}</h1>
+    {% if assignment %}
+    <a href="{% url 'teacher_assignment_detail' assignment.pk %}" class="btn btn-outline">返回作业</a>
+    {% endif %}
+</div>
+
+<div class="card">
+    {% if submissions %}
+    <table>
+        <thead>
+            <tr>
+                <th>学生</th>
+                <th>作业</th>
+                <th>得分</th>
+                <th>正确率</th>
+                <th>迟交</th>
+                <th>提交时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in submissions %}
+            <tr>
+                <td>{{ s.student.username }}</td>
+                <td>{{ s.assignment.title }}</td>
+                <td>{{ s.score }}</td>
+                <td>{{ s.accuracy_rate }}%</td>
+                <td>{% if s.is_late %}<span class="badge badge-danger">迟交</span>{% else %}-{% endif %}</td>
+                <td class="text-muted">{{ s.submitted_at|date:"Y-m-d H:i" }}</td>
+                <td><a href="{% url 'teacher_submission_detail' s.pk %}">查看详情</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% include "partials/_pagination.html" with page_obj=page_obj %}
+    {% else %}
+    <div class="empty-state"><p>暂无提交记录</p></div>
+    {% endif %}
+</div>
+{% endblock %}

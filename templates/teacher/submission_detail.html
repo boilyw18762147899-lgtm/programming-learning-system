@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}提交详情 - 编程学习系统{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>提交详情</h1>
+    <a href="{% url 'teacher_submission_list' %}" class="btn btn-outline">返回列表</a>
+</div>
+
+<div class="card">
+    <table>
+        <tr><td style="width:100px;font-weight:600;">学生</td><td>{{ submission.student.username }}</td></tr>
+        <tr><td style="font-weight:600;">作业</td><td>{{ submission.assignment.title }}</td></tr>
+        <tr><td style="font-weight:600;">得分</td><td><strong>{{ submission.score }} 分</strong></td></tr>
+        <tr><td style="font-weight:600;">正确率</td><td>{{ submission.accuracy_rate }}%（{{ submission.correct_count }}/{{ submission.total_count }}）</td></tr>
+        <tr><td style="font-weight:600;">迟交</td><td>{% if submission.is_late %}<span class="badge badge-danger">是</span>{% else %}否{% endif %}</td></tr>
+        <tr><td style="font-weight:600;">提交时间</td><td>{{ submission.submitted_at|date:"Y-m-d H:i:s" }}</td></tr>
+    </table>
+</div>
+
+<div class="card">
+    <h2>答题详情</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>序号</th>
+                <th>题目</th>
+                <th>学生答案</th>
+                <th>正确答案</th>
+                <th>结果</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for answer in submission.answers.all %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ answer.question.question_text|truncatechars:40 }}</td>
+                <td>{{ answer.selected_answer }}</td>
+                <td>{{ answer.question.correct_answer }}</td>
+                <td>
+                    {% if answer.is_correct %}
+                    <span class="answer-correct">✓ 正确</span>
+                    {% else %}
+                    <span class="answer-wrong">✗ 错误</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}{{ assignment.title }} - 编程学习系统{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ assignment.title }}</h1>
+    <div>
+        <a href="{% url 'teacher_assignment_edit' assignment.pk %}" class="btn btn-outline">编辑</a>
+        <form method="post" action="{% url 'teacher_assignment_toggle' assignment.pk %}" style="display:inline;">
+            {% csrf_token %}
+            {% if assignment.is_active %}
+            <button type="submit" class="btn btn-warning btn-sm">停用</button>
+            {% else %}
+            <button type="submit" class="btn btn-success btn-sm">启用</button>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <table>
+        <tr><td style="width:100px;font-weight:600;">作业说明</td><td>{{ assignment.description|default:"无" }}</td></tr>
+        <tr><td style="font-weight:600;">每题分值</td><td>{{ assignment.points_per_question }}分</td></tr>
+        <tr><td style="font-weight:600;">截止时间</td><td>{% if assignment.deadline %}{{ assignment.deadline|date:"Y-m-d H:i" }}{% else %}无截止{% endif %}</td></tr>
+        <tr><td style="font-weight:600;">状态</td><td>
+            {% if assignment.is_active %}<span class="badge badge-success">启用</span>{% else %}<span class="badge badge-gray">停用</span>{% endif %}
+            {% if assignment.is_expired %}<span class="badge badge-danger">已过期</span>{% endif %}
+        </td></tr>
+        <tr><td style="font-weight:600;">提交数</td><td>{{ submission_count }}</td></tr>
+    </table>
+</div>
+
+<div class="card">
+    <div class="flex-between mb-10">
+        <h2>题目列表 ({{ aq_list|length }})</h2>
+        <a href="{% url 'teacher_submission_list_by_assignment' assignment.pk %}" class="btn btn-outline btn-sm">查看提交</a>
+    </div>
+    {% if aq_list %}
+    <table>
+        <thead>
+            <tr>
+                <th>序号</th>
+                <th>题目</th>
+                <th>知识点</th>
+                <th>正确答案</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for aq in aq_list %}
+            <tr>
+                <td>{{ aq.order|add:1 }}</td>
+                <td>{{ aq.question.question_text|truncatechars:60 }}</td>
+                <td><span class="badge badge-info">{{ aq.question.knowledge_point.title }}</span></td>
+                <td><strong>{{ aq.question.correct_answer }}</strong></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state"><p>暂无题目</p></div>
+    {% endif %}
+</div>
+{% endblock %}

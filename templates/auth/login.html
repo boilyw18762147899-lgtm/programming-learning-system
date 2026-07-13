@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}登录 - 编程学习系统{% endblock %}
+
+{% block content %}
+<div class="login-wrapper">
+    <div class="login-card">
+        <h1>编程学习系统</h1>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <label for="id_username">用户名</label>
+            <input type="text" name="username" id="id_username"
+                   placeholder="请输入用户名" required autofocus>
+
+            <label for="id_role">登录身份</label>
+            <select name="role" id="id_role" required style="width:100%;padding:8px 12px;font-size:14px;border:1px solid #DDE1E6;border-radius:6px;margin-top:4px;">
+                <option value="">请选择...</option>
+                <option value="teacher">教师</option>
+                <option value="student">学生</option>
+                <option value="admin">管理员</option>
+            </select>
+
+            <button type="submit" class="btn btn-primary">登录</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

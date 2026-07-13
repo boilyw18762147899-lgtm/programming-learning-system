@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}{{ assignment.title }} - 编程学习系统{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ assignment.title }}</h1>
+    <a href="{% url 'student_assignment_list' %}" class="btn btn-outline">返回列表</a>
+</div>
+
+{% if existing_submission %}
+<div class="card">
+    <div class="empty-state">
+        <p>您已提交过此作业</p>
+        <a href="{% url 'student_submission_detail' existing_submission.pk %}" class="btn btn-primary">查看结果</a>
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <table>
+        <tr><td style="width:100px;font-weight:600;">作业说明</td><td>{{ assignment.description|default:"无" }}</td></tr>
+        <tr><td style="font-weight:600;">每题分值</td><td>{{ assignment.points_per_question }}分</td></tr>
+        <tr><td style="font-weight:600;">截止时间</td><td>{% if assignment.deadline %}{{ assignment.deadline|date:"Y-m-d H:i" }}{% else %}无截止{% endif %}</td></tr>
+        <tr><td style="font-weight:600;">题目数量</td><td>{{ questions|length }}题</td></tr>
+        <tr><td style="font-weight:600;">总分上限</td><td>{% widthratio questions|length 1 assignment.points_per_question %}分</td></tr>
+    </table>
+</div>
+
+<form method="post" onsubmit="return confirm('确认提交？提交后不可更改！');">
+    {% csrf_token %}
+
+    {% for field in answer_form %}
+    <div class="question-card">
+        <div class="q-header">{{ field.label }}</div>
+        <div class="q-options">
+            {{ field }}
+        </div>
+    </div>
+    {% endfor %}
+
+    {% if questions %}
+    <div style="text-align:center;margin:24px 0;">
+        <button type="submit" class="btn btn-success" style="padding:12px 48px;font-size:16px;">
+            提交作业
+        </button>
+    </div>
+    {% endif %}
+</form>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}教师主页 - 编程学习系统{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom:20px;">教师主页</h1>
+
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="number">{{ assignment_count }}</div>
+        <div class="label">我的作业</div>
+    </div>
+    <div class="stat-card">
+        <div class="number">{{ question_count }}</div>
+        <div class="label">题库总数</div>
+    </div>
+    <div class="stat-card">
+        <div class="number">{{ kp_count }}</div>
+        <div class="label">知识点</div>
+    </div>
+    <div class="stat-card">
+        <div class="number">{{ student_count }}</div>
+        <div class="label">学生数</div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>最近提交</h2>
+    {% if recent_submissions %}
+    <table>
+        <thead>
+            <tr>
+                <th>学生</th>
+                <th>作业</th>
+                <th>得分</th>
+                <th>正确率</th>
+                <th>提交时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in recent_submissions %}
+            <tr>
+                <td>{{ s.student.username }}</td>
+                <td>{{ s.assignment.title }}</td>
+                <td>{{ s.score }}</td>
+                <td>{{ s.accuracy_rate }}%</td>
+                <td>{{ s.submitted_at|date:"Y-m-d H:i" }}</td>
+                <td><a href="{% url 'teacher_submission_detail' s.pk %}">查看</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state"><p>暂无提交记录</p></div>
+    {% endif %}
+</div>
+{% endblock %}

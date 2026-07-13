@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}我的作业 - 编程学习系统{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>我的作业</h1>
+</div>
+
+<div class="card">
+    {% if assignments %}
+    <table>
+        <thead>
+            <tr>
+                <th>作业标题</th>
+                <th>截止时间</th>
+                <th>题目数</th>
+                <th>每题分值</th>
+                <th>状态</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for a in assignments %}
+            <tr>
+                <td>{{ a.title }}</td>
+                <td>{% if a.deadline %}{{ a.deadline|date:"Y-m-d H:i" }}{% else %}无截止{% endif %}</td>
+                <td>{{ a.question_count }}</td>
+                <td>{{ a.points_per_question }}分</td>
+                <td>
+                    {% if a.submission_id %}
+                    <span class="badge badge-success">已提交</span>
+                    {% elif a.is_expired %}
+                    <span class="badge badge-danger">已过期</span>
+                    {% else %}
+                    <span class="badge badge-warning">待完成</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if a.submission_id %}
+                    <a href="{% url 'student_submission_detail' a.submission_id %}" class="btn btn-sm btn-outline">查看结果</a>
+                    {% else %}
+                    <a href="{% url 'student_assignment_detail' a.pk %}" class="btn btn-sm btn-primary">去答题</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% include "partials/_pagination.html" with page_obj=page_obj %}
+    {% else %}
+    <div class="empty-state"><p>暂无作业</p></div>
+    {% endif %}
+</div>
+{% endblock %}

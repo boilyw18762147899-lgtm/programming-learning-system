@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}学生主页 - 编程学习系统{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom:20px;">学生主页</h1>
+
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="number">{{ points }}</div>
+        <div class="label">总积分</div>
+    </div>
+    <div class="stat-card">
+        <div class="number">{{ completed_count }}</div>
+        <div class="label">已完成作业</div>
+    </div>
+    <div class="stat-card">
+        <div class="number">{{ pending_count }}</div>
+        <div class="label">待完成作业</div>
+    </div>
+    <div class="stat-card">
+        <div class="number">{{ avg_accuracy }}%</div>
+        <div class="label">平均正确率</div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>最近提交</h2>
+    {% if recent_submissions %}
+    <table>
+        <thead>
+            <tr>
+                <th>作业</th>
+                <th>得分</th>
+                <th>正确率</th>
+                <th>提交时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in recent_submissions %}
+            <tr>
+                <td>{{ s.assignment.title }}</td>
+                <td>{{ s.score }}</td>
+                <td>{{ s.accuracy_rate }}%</td>
+                <td>{{ s.submitted_at|date:"Y-m-d H:i" }}</td>
+                <td><a href="{% url 'student_submission_detail' s.pk %}">查看</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <p>暂无提交记录</p>
+        <a href="{% url 'student_assignment_list' %}" class="btn btn-primary">去完成作业</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

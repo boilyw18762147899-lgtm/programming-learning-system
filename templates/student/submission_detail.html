@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}成绩详情 - 编程学习系统{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>成绩详情</h1>
+    <a href="{% url 'student_assignment_list' %}" class="btn btn-outline">返回作业列表</a>
+</div>
+
+<div class="card" style="text-align:center;">
+    <div class="stat-grid" style="grid-template-columns: repeat(3, 1fr);margin-bottom:0;">
+        <div class="stat-card">
+            <div class="number">{{ submission.score }}</div>
+            <div class="label">得分</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">{{ submission.accuracy_rate }}%</div>
+            <div class="label">正确率</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">{{ submission.correct_count }}/{{ submission.total_count }}</div>
+            <div class="label">正确/总数</div>
+        </div>
+    </div>
+    {% if submission.is_late %}
+    <span class="badge badge-danger" style="font-size:13px;">迟交</span>
+    {% endif %}
+    <div class="text-muted mt-10">提交时间：{{ submission.submitted_at|date:"Y-m-d H:i:s" }}</div>
+</div>
+
+<div class="card">
+    <h2>答题详情</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>序号</th>
+                <th>题目</th>
+                <th>你的答案</th>
+                <th>正确答案</th>
+                <th>结果</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for answer in submission.answers.all %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ answer.question.question_text|truncatechars:40 }}</td>
+                <td>{{ answer.selected_answer }}</td>
+                <td>{{ answer.question.correct_answer }}</td>
+                <td>
+                    {% if answer.is_correct %}
+                    <span class="answer-correct">✓ 正确</span>
+                    {% else %}
+                    <span class="answer-wrong">✗ 错误</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% if not answer.is_correct %}
+            <tr>
+                <td colspan="5" style="background:#FFF8F8;font-size:13px;">
+                    <strong>解析：</strong>{{ answer.question.explanation|default:"无解析" }}
+                </td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

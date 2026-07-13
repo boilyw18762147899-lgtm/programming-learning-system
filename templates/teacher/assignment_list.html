@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}作业管理 - 编程学习系统{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>作业管理</h1>
+    <a href="{% url 'teacher_assignment_create' %}" class="btn btn-primary">+ 创建作业</a>
+</div>
+
+<div class="card">
+    {% if assignments %}
+    <table>
+        <thead>
+            <tr>
+                <th>标题</th>
+                <th>截止时间</th>
+                <th>题目数</th>
+                <th>提交数</th>
+                <th>状态</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for a in assignments %}
+            <tr>
+                <td><a href="{% url 'teacher_assignment_detail' a.pk %}">{{ a.title }}</a></td>
+                <td>{% if a.deadline %}{{ a.deadline|date:"Y-m-d H:i" }}{% else %}无截止{% endif %}</td>
+                <td>{{ a.question_count }}</td>
+                <td>{{ a.submission_count }}</td>
+                <td>
+                    {% if a.is_active %}
+                    <span class="badge badge-success">启用</span>
+                    {% else %}
+                    <span class="badge badge-gray">停用</span>
+                    {% endif %}
+                    {% if a.is_expired %}
+                    <span class="badge badge-danger">已过期</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{% url 'teacher_assignment_detail' a.pk %}" class="btn btn-sm btn-outline">详情</a>
+                    <a href="{% url 'teacher_assignment_edit' a.pk %}" class="btn btn-sm btn-outline">编辑</a>
+                    <a href="{% url 'teacher_submission_list_by_assignment' a.pk %}" class="btn btn-sm btn-outline">提交({{ a.submission_count }})</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% include "partials/_pagination.html" with page_obj=page_obj %}
+    {% else %}
+    <div class="empty-state">
+        <p>暂无作业</p>
+        <a href="{% url 'teacher_assignment_create' %}" class="btn btn-primary">创建第一个作业</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

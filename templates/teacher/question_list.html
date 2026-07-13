@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}题库管理 - 编程学习系统{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>题库管理</h1>
+    <a href="{% url 'teacher_question_create' %}" class="btn btn-primary">+ 添加题目</a>
+</div>
+
+<div class="card">
+    <div class="filter-bar">
+        <span>筛选知识点：</span>
+        <select onchange="location.href='?knowledge_point='+this.value">
+            <option value="">全部</option>
+            {% for kp in knowledge_points %}
+            <option value="{{ kp.pk }}" {% if current_kp == kp.pk|stringformat:"s" %}selected{% endif %}>
+                {{ kp.title }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    {% if questions %}
+    <table>
+        <thead>
+            <tr>
+                <th>题目</th>
+                <th>知识点</th>
+                <th>难度</th>
+                <th>正确答案</th>
+                <th>创建时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for q in questions %}
+            <tr>
+                <td><a href="{% url 'teacher_question_edit' q.pk %}">{{ q.question_text|truncatechars:50 }}</a></td>
+                <td><span class="badge badge-info">{{ q.knowledge_point.title }}</span></td>
+                <td>{{ q.difficulty }}/5</td>
+                <td><strong>{{ q.correct_answer }}</strong></td>
+                <td class="text-muted">{{ q.created_at|date:"Y-m-d" }}</td>
+                <td>
+                    <a href="{% url 'teacher_question_edit' q.pk %}" class="btn btn-sm btn-outline">编辑</a>
+                    <a href="{% url 'teacher_question_delete' q.pk %}" class="btn btn-sm btn-outline" style="color:#E74C3C;border-color:#E74C3C;">删除</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% include "partials/_pagination.html" with page_obj=page_obj %}
+    {% else %}
+    <div class="empty-state">
+        <p>暂无题目</p>
+        <a href="{% url 'teacher_question_create' %}" class="btn btn-primary">创建第一道题目</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

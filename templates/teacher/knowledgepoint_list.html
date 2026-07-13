@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}知识点管理 - 编程学习系统{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>知识点管理</h1>
+    <a href="{% url 'teacher_kp_create' %}" class="btn btn-primary">+ 添加知识点</a>
+</div>
+
+<div class="card">
+    {% if knowledge_points %}
+    <table>
+        <thead>
+            <tr>
+                <th>标题</th>
+                <th>分类</th>
+                <th>题目数</th>
+                <th>创建时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for kp in knowledge_points %}
+            <tr>
+                <td><a href="{% url 'teacher_kp_edit' kp.pk %}">{{ kp.title }}</a></td>
+                <td><span class="badge badge-info">{{ kp.category }}</span></td>
+                <td>{{ kp.question_count }}</td>
+                <td class="text-muted">{{ kp.created_at|date:"Y-m-d" }}</td>
+                <td>
+                    <a href="{% url 'teacher_kp_edit' kp.pk %}" class="btn btn-sm btn-outline">编辑</a>
+                    <a href="{% url 'teacher_kp_delete' kp.pk %}" class="btn btn-sm btn-outline" style="color:#E74C3C;border-color:#E74C3C;">删除</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% include "partials/_pagination.html" with page_obj=page_obj %}
+    {% else %}
+    <div class="empty-state">
+        <p>暂无知识点</p>
+        <a href="{% url 'teacher_kp_create' %}" class="btn btn-primary">创建第一个知识点</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

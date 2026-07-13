@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}删除题目 - 编程学习系统{% endblock %}
+
+{% block content %}
+<div class="page-header"><h1>确认删除</h1></div>
+<div class="card">
+    <p style="font-size:16px;margin-bottom:20px;">
+        确定要删除题目 <strong>"{{ object.question_text|truncatechars:50 }}"</strong> 吗？
+    </p>
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-actions">
+            <button type="submit" class="btn btn-danger">确认删除</button>
+            <a href="{% url 'teacher_question_list' %}" class="btn btn-outline">取消</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

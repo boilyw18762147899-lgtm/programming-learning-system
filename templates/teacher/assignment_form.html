@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}{% if form.instance.pk %}编辑作业{% else %}创建作业{% endif %} - 编程学习系统{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{% if form.instance.pk %}编辑作业{% else %}创建作业{% endif %}</h1>
+    <a href="{% url 'teacher_assignment_list' %}" class="btn btn-outline">返回列表</a>
+</div>
+
+<div class="card">
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">保存</button>
+            <a href="{% url 'teacher_assignment_list' %}" class="btn btn-outline">取消</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
